@@ -186,6 +186,20 @@ for (funcname, fieldname) in ((:red, :r), (:green, :g), (:blue, :b))
     end
 end
 
+function separate{CV<:ColorValue}(img::AbstractImage{CV})
+    A = separate(convert(Array, img))
+    props = copy(properties(img))
+    props["colorspace"] = colorspace(img)
+    props["colordim"] = ndims(A)
+    Image(A, props)
+end
+function separate{CV<:ColorValue}(A::AbstractArray{CV})
+    T = eltype(CV)
+    nchannels = div(sizeof(CV), sizeof(T))
+    permutedims(reinterpret(T, A, tuple(nchannels, size(A)...)), [2:ndims(A)+1,1])
+end
+separate(A::AbstractArray) = A
+
 for N = 1:4
     N1 = N-1
     @eval begin
